@@ -14,8 +14,12 @@ const player1Section = document.querySelector('.player--1');
 
 // 0 for Player 1, 1 for Player 2
 let activePlayerFlag = 0;
+
 let currentScore = 0;
 let activePlayer;
+
+// boolean to check whether game is being played or is finished
+let playing;
 
 // Create player class
 class Player {
@@ -55,6 +59,8 @@ function setInitialState() {
     player.score = 0;
     player.scoreElement.textContent = 0;
   });
+
+  playing = true;
 }
 
 setInitialState();
@@ -71,31 +77,48 @@ const switchPlayer = function () {
 
 // Rolling dice functionality
 btnRoll.addEventListener('click', function () {
-  // Generating a random dice roll
-  const dice = Math.trunc(Math.random() * 6) + 1;
+  if (playing) {
+    // Generating a random dice roll
+    const dice = Math.trunc(Math.random() * 6) + 1;
 
-  // Display the dice.
-  if (diceEl.classList.contains('hidden')) diceEl.classList.remove('hidden');
-  diceEl.src = `dice-${dice}.png`;
+    // Display the dice.
+    if (diceEl.classList.contains('hidden')) diceEl.classList.remove('hidden');
+    diceEl.src = `dice-${dice}.png`;
 
-  // Check if rolled 1:
-  if (dice != 1) {
-    // Add dice to current score
-    activePlayer.setCurrentScore(dice, true);
+    // Check if rolled 1:
+    if (dice != 1) {
+      // Add dice to current score
+      activePlayer.setCurrentScore(dice, true);
 
-    // Switch to next player
-  } else {
-    switchPlayer();
+      // Switch to next player
+    } else {
+      switchPlayer();
+    }
   }
 });
 
 btnHold.addEventListener('click', function () {
-  activePlayer.addCurrentScoreToScore();
-  switchPlayer();
+  if (playing) {
+    activePlayer.addCurrentScoreToScore();
+
+    //Check if current player has won
+    if (activePlayer.score >= 100) {
+      activePlayer.sectionElement.classList.add('player--winner');
+      activePlayer.toggleActive();
+      diceEl.classList.add('hidden');
+      playing = false;
+    } else {
+      switchPlayer();
+    }
+  }
 });
 
 btnNew.addEventListener('click', function () {
-  // If Player 2 is active, switch; otherwise clear current score
+  if (activePlayer.sectionElement.classList.contains('player--winner')) {
+    activePlayer.sectionElement.classList.remove('player--winner');
+    activePlayer.toggleActive();
+  }
+  // If Player 2 is active, switch; otherwise just clear current score
   activePlayerFlag ? switchPlayer() : activePlayer.setCurrentScore(0, false);
 
   setInitialState();
