@@ -13,44 +13,37 @@ const player0Section = document.querySelector('.player--0');
 const player1Section = document.querySelector('.player--1');
 
 // 0 for Player 1, 1 for Player 2
-let activePlayer = 0;
+let activePlayerFlag = 0;
+let currentScore = 0;
+let activePlayer;
 
 // Create player class
-function Player(
-  score,
-  currentScore,
-  scoreElement,
-  currentScoreElement,
-  sectionElement
-) {
-  this.score = score;
-  this.currentScore = currentScore;
-  this.scoreElement = scoreElement;
-  this.currentScoreElement = currentScoreElement;
-  this.sectionElement = sectionElement;
+class Player {
+  constructor(score, scoreElement, currentScoreElement, sectionElement) {
+    this.score = score;
+    this.scoreElement = scoreElement;
+    this.currentScoreElement = currentScoreElement;
+    this.sectionElement = sectionElement;
+  }
 
-  this.setCurrentScore = function (newScore, increment) {
-    this.currentScore = increment ? this.currentScore + newScore : newScore;
-    this.currentScoreElement.textContent = this.currentScore;
+  setCurrentScore = function (newScore, increment) {
+    currentScore = increment ? currentScore + newScore : newScore;
+    this.currentScoreElement.textContent = currentScore;
   };
 
-  this.addCurrentScoreToScore = function () {
-    this.score += this.currentScore;
+  addCurrentScoreToScore = function () {
+    this.score += currentScore;
     this.scoreElement.textContent = this.score;
   };
 
-  this.makeActive = function () {
-    this.sectionElement.classList.add('player--active');
-  };
-
-  this.makeInactive = function () {
-    this.sectionElement.classList.remove('player--active');
+  toggleActive = function () {
+    this.sectionElement.classList.toggle('player--active');
   };
 }
 
 // Create player objects for the 2 players
-const player0 = new Player(0, 0, score0El, currentScore0El, player0Section);
-const player1 = new Player(0, 0, score1El, currentScore1El, player1Section);
+const player0 = new Player(0, score0El, currentScore0El, player0Section);
+const player1 = new Player(0, score1El, currentScore1El, player1Section);
 
 const players = [player0, player1];
 
@@ -66,18 +59,20 @@ function setInitialState() {
 
 setInitialState();
 
+activePlayer = players[activePlayerFlag];
+
 const switchPlayer = function () {
-  players[activePlayer].setCurrentScore(0, false);
-  players[activePlayer].makeInactive();
-  activePlayer = 1 - activePlayer;
-  players[activePlayer].makeActive();
+  activePlayer.setCurrentScore(0, false);
+  activePlayer.toggleActive();
+  activePlayerFlag = 1 - activePlayerFlag;
+  activePlayer = players[activePlayerFlag];
+  activePlayer.toggleActive();
 };
 
 // Rolling dice functionality
 btnRoll.addEventListener('click', function () {
   // Generating a random dice roll
   const dice = Math.trunc(Math.random() * 6) + 1;
-  console.log(dice);
 
   // Display the dice.
   if (diceEl.classList.contains('hidden')) diceEl.classList.remove('hidden');
@@ -86,7 +81,7 @@ btnRoll.addEventListener('click', function () {
   // Check if rolled 1:
   if (dice != 1) {
     // Add dice to current score
-    players[activePlayer].setCurrentScore(dice, true);
+    activePlayer.setCurrentScore(dice, true);
 
     // Switch to next player
   } else {
@@ -95,14 +90,13 @@ btnRoll.addEventListener('click', function () {
 });
 
 btnHold.addEventListener('click', function () {
-  players[activePlayer].addCurrentScoreToScore();
+  activePlayer.addCurrentScoreToScore();
   switchPlayer();
 });
 
 btnNew.addEventListener('click', function () {
-  activePlayer
-    ? switchPlayer()
-    : players[activePlayer].setCurrentScore(0, false);
+  // If Player 2 is active, switch; otherwise clear current score
+  activePlayerFlag ? switchPlayer() : activePlayer.setCurrentScore(0, false);
 
   setInitialState();
 });
