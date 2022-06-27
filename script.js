@@ -12,11 +12,6 @@ const btnHold = document.querySelector('.btn--hold');
 const player0Section = document.querySelector('.player--0');
 const player1Section = document.querySelector('.player--1');
 
-// Starting conditions
-score0El.textContent = 0;
-score1El.textContent = 0;
-diceEl.classList.add('hidden');
-
 // 0 for Player 1, 1 for Player 2
 let activePlayer = 0;
 
@@ -34,7 +29,7 @@ function Player(
   this.currentScoreElement = currentScoreElement;
   this.sectionElement = sectionElement;
 
-  this.setCurrentScoreElement = function (newScore, increment) {
+  this.setCurrentScore = function (newScore, increment) {
     this.currentScore = increment ? this.currentScore + newScore : newScore;
     this.currentScoreElement.textContent = this.currentScore;
   };
@@ -53,13 +48,26 @@ function Player(
   };
 }
 
+// Create player objects for the 2 players
 const player0 = new Player(0, 0, score0El, currentScore0El, player0Section);
 const player1 = new Player(0, 0, score1El, currentScore1El, player1Section);
 
 const players = [player0, player1];
 
+// Starting conditions
+function setInitialState() {
+  diceEl.classList.add('hidden');
+
+  players.forEach(player => {
+    player.score = 0;
+    player.scoreElement.textContent = 0;
+  });
+}
+
+setInitialState();
+
 const switchPlayer = function () {
-  players[activePlayer].setCurrentScoreElement(0, false);
+  players[activePlayer].setCurrentScore(0, false);
   players[activePlayer].makeInactive();
   activePlayer = 1 - activePlayer;
   players[activePlayer].makeActive();
@@ -72,13 +80,13 @@ btnRoll.addEventListener('click', function () {
   console.log(dice);
 
   // Display the dice.
-  diceEl.classList.remove('hidden');
+  if (diceEl.classList.contains('hidden')) diceEl.classList.remove('hidden');
   diceEl.src = `dice-${dice}.png`;
 
   // Check if rolled 1:
   if (dice != 1) {
     // Add dice to current score
-    players[activePlayer].setCurrentScoreElement(dice, true);
+    players[activePlayer].setCurrentScore(dice, true);
 
     // Switch to next player
   } else {
@@ -89,4 +97,12 @@ btnRoll.addEventListener('click', function () {
 btnHold.addEventListener('click', function () {
   players[activePlayer].addCurrentScoreToScore();
   switchPlayer();
+});
+
+btnNew.addEventListener('click', function () {
+  activePlayer
+    ? switchPlayer()
+    : players[activePlayer].setCurrentScore(0, false);
+
+  setInitialState();
 });
